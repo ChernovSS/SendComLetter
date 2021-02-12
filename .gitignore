@@ -126,3 +126,5 @@ dmypy.json
 
 #Idea
 .idea/
+/credentials.json
+/token.pickle
