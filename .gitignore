@@ -128,3 +128,4 @@ dmypy.json
 .idea/
 /credentials.json
 /token.pickle
+/botapi.txt
