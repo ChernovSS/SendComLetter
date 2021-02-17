@@ -10,7 +10,8 @@
     {"reciepientId": 2, "products":[{"name":"product5"},{"name":"product5"}]}
     ],
   "sender": {
-    "name": "Sender Test",
+    "id": 1,
+    "fullName": "Sender Test",
     "email": "sender@test.com"
   }
 }

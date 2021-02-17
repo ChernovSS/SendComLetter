@@ -1,5 +1,3 @@
-
-import logging
 from typing import Dict
 import os
 from dotenv import load_dotenv
@@ -9,98 +7,45 @@ from telegram.ext import (
     CommandHandler,
     MessageHandler,
     Filters,
-    ConversationHandler,
     CallbackContext,
-
 )
 
-# Enable logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
-
-logger = logging.getLogger(__name__)
-
-CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
-
-# Buttons for main menu
-reply_keyboard = [
-    ['Load json'],
-    ['Number of siblings', 'Something else...'],
-    ['Done'],
-]
-markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
-
-
-def facts_to_str(user_data: Dict[str, str]) -> str:
-    facts = list()
-
-    for key, value in user_data.items():
-        facts.append(f'{key} - {value}')
-
-    return "\n".join(facts).join(['\n', '\n'])
 
 
 def start(update: Update, context: CallbackContext) -> int:
     update.message.reply_text(
-        "Hi! My name is Doctor Botter. I will hold a more complex conversation with you. "
-        "Why don't you tell me something about yourself?",
-
-        reply_markup=markup,
+        "Starting message"
     )
 
-    return CHOOSING
+def help(update: Update, context: CallbackContext) -> int:
+    message_id = update.message.message_id
+    update.message.reply_text(
+        "Helping message",
+        reply_to_message_id=message_id
+    )
+
+def get(update: Update, context: CallbackContext) -> int:
+    message_id = update.message.message_id
+    with open("test.json", "rb") as misc:
+        file = misc.read()
+    # update.message.reply_document('https://i.kym-cdn.com/photos/images/original/001/356/324/914.gif')
+    update.message.reply_document(file,
+                                  filename='template.json')
 
 def  load(update: Update, context: CallbackContext) -> int:
+    message_id = update.message.message_id
+    filename = update.message.document.file_name
     file = context.bot.getFile(update.message.document.file_id)
-    file.download('test22.json')
-    print(file)
-    return CHOOSING
-
-def regular_choice(update: Update, context: CallbackContext) -> int:
-    text = update.message.text
-    context.user_data['choice'] = text
-    update.message.reply_text(f'Your {text.lower()}? Yes, I would love to hear about that!')
-
-    return TYPING_REPLY
-
-
-def custom_choice(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text(
-        'Alright, please send me the category first, ' 'for example "Most impressive skill"'
-    )
-
-    return TYPING_CHOICE
-
-
-def received_information(update: Update, context: CallbackContext) -> int:
-    user_data = context.user_data
-    text = update.message.text
-    category = user_data['choice']
-    user_data[category] = text
-    del user_data['choice']
+    parse_file_name = f'{message_id}-parsing.json'
+    file.download(parse_file_name)
 
     update.message.reply_text(
-        "Neat! Just so you know, this is what you already told me:"
-        f"{facts_to_str(user_data)} You can tell me more, or change your opinion"
-        " on something.",
-        reply_markup=markup,
+        f'You upload file - {filename}',
+        reply_to_message_id=message_id
     )
 
-    return CHOOSING
 
 
-def done(update: Update, context: CallbackContext) -> int:
-    user_data = context.user_data
-    if 'choice' in user_data:
-        del user_data['choice']
-
-    update.message.reply_text(
-        f"I learned these facts about you: {facts_to_str(user_data)} Until next time!"
-    )
-
-    user_data.clear()
-    return ConversationHandler.END
 
 
 def main() -> None:
@@ -111,39 +56,13 @@ def main() -> None:
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
-
-    # Add conversation handler with the states CHOOSING, TYPING_CHOICE and TYPING_REPLY
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
-        states={
-            CHOOSING: [
-                MessageHandler(
-                    Filters.regex('^(Age|Favourite colour|Number of siblings)$'), regular_choice
-                ),
-                MessageHandler(Filters.regex('^Something else...$'), custom_choice),
-            ],
-            TYPING_CHOICE: [
-                MessageHandler(
-                    Filters.text & ~(Filters.command | Filters.regex('^Done$')), regular_choice
-                )
-            ],
-            TYPING_REPLY: [
-                MessageHandler(
-                    Filters.text & ~(Filters.command | Filters.regex('^Done$')),
-                    received_information,
-                )
-            ],
-        },
-        fallbacks=[MessageHandler(Filters.regex('^Done$'), done)],
-    )
-
-    dispatcher.add_handler(conv_handler)
+    dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CommandHandler('help', help))
+    dispatcher.add_handler(CommandHandler('get', get))
     dispatcher.add_handler(MessageHandler(Filters.document, load))
 
     # Start the Bot
     updater.start_polling()
-
-
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
