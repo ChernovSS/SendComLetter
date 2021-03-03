@@ -1,9 +1,8 @@
 from processed import Processed
-import Modules.Types as Type
 
 
 def main():
-    filename = 'test.json'
+    filename = 'test.csv'
     proc = Processed(filename=filename)
 
     if proc.has_error:

@@ -5,7 +5,7 @@
     {"id":3, "fullName":"Test3", "email":"test3@test.com"}
     ],
   "productLists": [
-    {"reciepientId": 1, "products":[{"name":"product1"},{"te":"product2"}]},
+    {"reciepientId": 1, "products":[{"name":"product1"},{"name":"product2"}]},
     {"reciepientId": 1, "products":[{"name":"product3"},{"name":"product4"}]},
     {"reciepientId": 2, "products":[{"name":"product5"},{"name":"product5"}]}
     ],

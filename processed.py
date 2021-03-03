@@ -1,5 +1,7 @@
 import json
-from typing import Dict, List
+import csv
+from typing import List
+
 import Modules.Types as Type
 from Modules.Gmail import Gmail
 
@@ -31,6 +33,8 @@ class Processed:
         file_extension = filename.split('.')[-1]
         if file_extension.lower() == 'json':
             self.parse_json(filename)
+        elif file_extension.lower() == 'csv':
+            self.parse_csv(filename)
         else:
             self.raiseError("undestrand")
 
@@ -82,22 +86,70 @@ class Processed:
 
         return data
 
+    # noinspection PyBroadException
+    def read_csv(self, filename):
+        data = None
+        try:
+            with open(filename, newline='') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+                next(reader, None)
+                index = 1
+                for row in reader:
+                    print(row)
+                    new_recipient = Type.Contact(index, row[0], row[1])
+                    new_product = Type.Products(index, )
+            exit()
+        except Exception as e:
+            self.raiseError(f"Can't read file - {filename}")
+
+        if not ((Type.KEY_RECIPIENTS or Type.KEY_SENDER or Type.KEY_PRODUCT_LISTS) in data):
+            self.raiseError("Json not have all keys")
+
+        return data
+
     def send_mails(self):
         for recepient in self.recipients:
             self.send_mail(recepient)
 
     # noinspection PyTypeChecker
     def send_mail(self, recepient):
-        products = [product['name'] for product in self.products if product['contactid'] == recepient['id'] or 0]
+        products = [product.name for product in self.products if product.contactid == recepient.id or 0]
         if len(products) <= 0:
-            self.raiseError("Not Products. Email can't sending")
+            self.raiseError(f"Not Products. Email can't sending to {recepient.email}")
 
-        send_to = recepient['email']
+        send_to = recepient.email
         subject = f'Commercial Proposal'
         email_body = Type.email_body(recepient, self.sender, products)
         try:
             gmail = Gmail()
-            gmail.send_gmail(send_to,subject,email_body)
+            gmail.send_gmail(send_to, subject, email_body)
         except Exception as e:
             self.raiseError(f"Something wrong when send email to {send_to} : \r\n {e}")
 
+    def parse_csv(self, filename):
+        data = self.read_csv(filename)
+
+        if self.has_error:
+            return False
+        try:
+            self.recipients = []
+            for data_one in data[Type.KEY_RECIPIENTS]:
+                recipient = Type.Contact(id=data_one['id'],
+                                         fullname=data_one['fullName'],
+                                         email=data_one['email'])
+                self.recipients.append(recipient)
+
+            self.products = []
+            for data_one in data[Type.KEY_PRODUCT_LISTS]:
+                contact_id = data_one['reciepientId']
+                for prod in data_one[Type.KEY_PRODUCTS]:
+                    product_name = prod['name']
+                    product = Type.Products(contactid=contact_id,
+                                            name=product_name)
+                    self.products.append(product)
+
+            self.sender = Type.Contact(id=data[Type.KEY_SENDER]['id'],
+                                       fullname=data[Type.KEY_SENDER]['fullName'],
+                                       email=data[Type.KEY_SENDER]['email'])
+        except Exception as e:
+            self.raiseError(f"Something wrong: \r\n {e}")

@@ -1,7 +1,7 @@
-from typing import Dict
 import os
+
 from dotenv import load_dotenv
-from telegram import ReplyKeyboardMarkup, Update
+from telegram import Update
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -10,21 +10,24 @@ from telegram.ext import (
     CallbackContext,
 )
 
+from processed import Processed
 
 
-def start(update: Update, context: CallbackContext) -> int:
+def start(update: Update, context: CallbackContext):
     update.message.reply_text(
         "Starting message"
     )
 
-def help(update: Update, context: CallbackContext) -> int:
+
+def help(update: Update, context: CallbackContext):
     message_id = update.message.message_id
     update.message.reply_text(
         "Helping message",
         reply_to_message_id=message_id
     )
 
-def get(update: Update, context: CallbackContext) -> int:
+
+def get(update: Update, context: CallbackContext):
     message_id = update.message.message_id
     with open("test.json", "rb") as misc:
         file = misc.read()
@@ -32,20 +35,23 @@ def get(update: Update, context: CallbackContext) -> int:
     update.message.reply_document(file,
                                   filename='template.json')
 
-def  load(update: Update, context: CallbackContext) -> int:
+
+def load(update: Update, context: CallbackContext):
     message_id = update.message.message_id
     filename = update.message.document.file_name
     file = context.bot.getFile(update.message.document.file_id)
-    parse_file_name = f'{message_id}-parsing.json'
+    parse_file_name = f'{message_id}-{filename}'
     file.download(parse_file_name)
 
+    processed = Processed(filename=parse_file_name)
+    processed_message = 'Send Complete'
+    if processed.has_error:
+        print(processed.err_message)
+        processed_message = f'When send some email has raise error: {processed.err_message}'
     update.message.reply_text(
-        f'You upload file - {filename}',
+        f'You upload file - {filename} \n\r {processed_message}',
         reply_to_message_id=message_id
     )
-
-
-
 
 
 def main() -> None:

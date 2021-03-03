@@ -23,7 +23,7 @@ def main():
         #             [products['products'] for products in product_lists if products['reciepientId'] == recipient['id']]]
         # print(products)
 
-        products_name = get_products(product_lists,  recipient)
+        products_name = get_products(product_lists, recipient)
         print(products_name)
         if len(products_name) > 0:
             body = send_mail(products_name, recipient, sender)
@@ -48,7 +48,7 @@ def send_mail(products_name, recipient, sender):
     body = body_header + body_product_list + body_footer;
 
     gmail = Gmail()
-    gmail.send_gmail(send_to,subject,body)
+    gmail.send_gmail(send_to, subject, body)
     return body
 
 
@@ -59,6 +59,7 @@ def get_products(product_lists, recipient):
             for product in products['products']:
                 result.append(product['name'])
     return result
+
 
 if __name__ == "__main__":
     main()

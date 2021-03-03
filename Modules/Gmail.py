@@ -1,17 +1,19 @@
-import os
 import base64
+import os
 import pickle
-from pathlib import Path
 from email.mime.text import MIMEText
-import googleapiclient.discovery
-import google_auth_oauthlib.flow
+from pathlib import Path
+
 import google.auth.transport.requests
+import google_auth_oauthlib.flow
+import googleapiclient.discovery
+
 
 class Gmail:
     def __init__(self):
         pass
 
-    def retry_credential_request(self, force = False):
+    def retry_credential_request(self, force=False):
         """ Deletes token.pickle file and re-runs the original request function """
         print("⚠ Insufficient permission, probably due to changing scopes.")
         i = input("Type [D] to delete token and retry: ") if force == False else 'd'
@@ -51,10 +53,9 @@ class Gmail:
         message['subject'] = subject
         raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
         try:
-            request=gmail_api.users().messages().send(userId = 'me', body = {'raw': raw}).execute()
+            request = gmail_api.users().messages().send(userId='me', body={'raw': raw}).execute()
             print(request)
         except googleapiclient.errors.HttpError as E:
             print(E)
             return
         return request
-
